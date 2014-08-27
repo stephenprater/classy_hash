@@ -3,13 +3,33 @@
 # Copyright (C)2014 Deseret Book
 # See LICENSE and README.md for details.
 
+require 'continuation'
+
 # This module contains the ClassyHash methods for making sure Ruby Hash objects
 # match a given schema.  ClassyHash runs fast by taking advantage of Ruby
 # language features and avoiding object creation during validation.
-
-require 'continuation'
-
 module ClassyHash
+  # Raised when a validation fails.  Allows ClassyHash#validate_full to
+  # continue validation and gather all errors.
+  class SchemaViolationError < StandardError
+    attr :entries, :cont
+
+    def initialize(entries = [], cont = nil)
+      @entries, @cont = entries, cont
+    end
+
+    def continue
+      cont.call
+    end
+
+    def full_message
+      entries.each_with_object [] do |entry, list|
+        list << "#{entry.fetch(:full_path)} is not #{entry.fetch(:message)}"
+      end.join(', ')
+    end
+    alias_method :to_s, :full_message
+  end
+
   # Validates a +hash+ against a +schema+.  The +parent_path+ parameter is used
   # internally to generate error messages.
   def self.validate(hash, schema, parent_path=nil)
@@ -175,25 +195,6 @@ module ClassyHash
       entry = { full_path: ClassyHash.join_path(parent_path, key), message: message }
       raise SchemaViolationError.new([entry], cont)
     end
-  end
-
-  class SchemaViolationError < StandardError
-    attr :entries, :cont
-
-    def initialize(entries = [], cont = nil)
-      @entries, @cont = entries, cont
-    end
-
-    def continue
-      cont.call
-    end
-
-    def full_message
-      entries.each_with_object [] do |entry, list|
-        list << "#{entry.fetch(:full_path)} is not #{entry.fetch(:message)}"
-      end.join(', ')
-    end
-    alias_method :to_s, :full_message
   end
 end
 
