@@ -23,8 +23,12 @@ module ClassyHash
     end
 
     def full_message
-      entries.each_with_object [] do |entry, list|
-        list << "#{entry.fetch(:full_path)} is not #{entry.fetch(:message)}"
+      @entries.each_with_object [] do |entry, list|
+        if entry[:full_path]
+          list << "#{entry[:full_path]} is not #{entry[:message]}"
+        else
+          list << entry[:message]
+        end
       end.join(', ')
     end
     alias_method :to_s, :full_message
@@ -54,7 +58,7 @@ module ClassyHash
     raise 'Schema must be a Hash' unless schema.is_a?(Hash) # TODO: Allow individual element validations?
 
     unless (hash.keys - schema.keys).empty?
-      raise "Hash contains members not specified in schema"
+      raise_error(nil, nil, 'Hash contains members not specified in schema')
     end
 
     # TODO: Strict validation for nested schemas as well
@@ -62,11 +66,12 @@ module ClassyHash
     self.validate(hash, schema, parent_path)
   end
 
-  # Similar to #validate, but collects *all* schema violation errors
-  def self.validate_full(hash, schema, &block)
+  # Similar to #validate (or #validate_strict if +strict+ is true), but
+  # collects *all* schema violation errors.
+  def self.validate_full(hash, schema, strict = false, &block)
     error_entries = []
     begin
-      validate(hash, schema)
+      strict ? validate_strict(hash, schema) : validate(hash, schema)
     rescue SchemaViolationError => error
       error_entries.concat error.entries
       error.continue
@@ -189,10 +194,16 @@ module ClassyHash
   end
 
   # Raises an error indicating that the given +key+ under the given
-  # +parent_path+ fails because the value "is not #{+message+}".
+  # +parent_path+ fails because the value "is not #{+message+}"
+  #
+  # If parent_path and key are both nil, then the error message will just be
+  # the given +message+.
   def self.raise_error(parent_path, key, message)
     callcc do |cont|
-      entry = { full_path: ClassyHash.join_path(parent_path, key), message: message }
+      entry = {
+        full_path: (parent_path || key) && ClassyHash.join_path(parent_path, key),
+        message: message
+      }
       raise SchemaViolationError.new([entry], cont)
     end
   end
