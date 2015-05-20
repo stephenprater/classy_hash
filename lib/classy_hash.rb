@@ -147,8 +147,9 @@ module ClassyHash
       nil
 
     else
-      # Unknown schema constraint
-      self.raise_error(parent_path, key, "a valid schema constraint: #{constraint.inspect}")
+      unless value == constraint
+        self.raise_error(parent_path, key, "is not equal to #{constraint.inspect}")
+      end
     end
 
     nil

@@ -20,23 +20,25 @@ RSpec.describe ClassyHash do
         k2: Numeric,
         k3: Fixnum,
         k4: TrueClass,
+        k5: 'value'
       },
 
       # Good hashes for this schema
       good: [
-        { k1: 'V1', k2: 2, k3: 3, k4: true },
-        { k1: 'Val1', k2: 2.2, k3: -3, k4: false },
-        { k1: 'V1', k2: Rational(-2, 7), k3: 0, k4: true },
+        { k1: 'V1', k2: 2, k3: 3, k4: true, k5: 'value' },
+        { k1: 'Val1', k2: 2.2, k3: -3, k4: false, k5: 'value' },
+        { k1: 'V1', k2: Rational(-2, 7), k3: 0, k4: true, k5: 'value' },
       ],
 
       # Bad hashes for this schema, with expected error message (string or regex)
       bad: [
         [ /^:k1.*present/, { } ],
-        [ /^:k1/, { k1: :optional, k2: 2, k3: 3, k4: true } ],
-        [ /^:k2/, { k1: '', k2: nil, k3: 3, k4: true } ],
-        [ /^:k3/, { k1: '', k2: 0, k3: 3.3, k4: true } ],
-        [ /^:k3/, { k1: '', k2: 0, k3: 1<<200, k4: true } ],
-        [ /^:k4/, { k1: '', k2: 0, k3: 3, k4: 'invalid' } ]
+        [ /^:k1/, { k1: :optional, k2: 2, k3: 3, k4: true, k5: 'value' } ],
+        [ /^:k2/, { k1: '', k2: nil, k3: 3, k4: true, k5: 'value' } ],
+        [ /^:k3/, { k1: '', k2: 0, k3: 3.3, k4: true, k5: 'value' } ],
+        [ /^:k3/, { k1: '', k2: 0, k3: 1<<200, k4: true, k5: 'value' } ],
+        [ /^:k4/, { k1: '', k2: 0, k3: 3, k4: 'invalid', k5: 'value' } ],
+        [ /^:k5/, { k1: '', k2: 0, k3: 3, k4: true, k5: 'not value' } ]
       ],
     },
     {
